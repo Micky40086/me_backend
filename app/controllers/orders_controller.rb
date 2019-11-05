@@ -15,9 +15,9 @@ class OrdersController < ApplicationController
 
   # POST /orders
   def create
-    @order = Order.new(order_params)
-
+    @order = Order.new
     if @order.save
+      set_products
       render json: @order, status: :created, location: @order
     else
       render json: @order.errors, status: :unprocessable_entity
@@ -39,13 +39,23 @@ class OrdersController < ApplicationController
   end
 
   private
-    # Use callbacks to share common setup or constraints between actions.
-    def set_order
-      @order = Order.find(params[:id])
-    end
 
-    # Only allow a trusted parameter "white list" through.
-    def order_params
-      params.require(:order).permit(:uid, :is_paid)
+  # Use callbacks to share common setup or constraints between actions.
+  def set_order
+    @order = Order.find(params[:id])
+  end
+
+  # Only allow a trusted parameter "white list" through.
+  def order_params
+    params.require(:order).permit(:uid, :is_paid)
+  end
+
+  def set_products
+    if params[:products]
+      products = JSON.parse(params[:products])
+      products.each do |k,v|
+        @order.product_details.create(:product_id => k, :amount => v)
+      end
     end
+  end
 end
